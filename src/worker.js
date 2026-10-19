@@ -1,15 +1,38 @@
 import { DurableObject } from "cloudflare:workers";
+import page from "./index.html"; // Wrangler bundles .html files as text, so no /public folder is needed.
 
-// Routes /ws to the single BarRoom Durable Object; everything else is the static site in /public.
+// Sites allowed to open the WebSocket besides the Worker's own address.
+// Add more with a comma-separated ALLOWED_ORIGINS variable, or edit this list.
+const DEFAULT_ORIGINS = ["https://option2.live", "https://www.option2.live"];
+
+function originOk(origin, url, env) {
+  if (!origin) return true; // non-browser clients; the staff passcode still applies
+  let host;
+  try { host = new URL(origin).host; } catch { return false; }
+  if (host === url.host) return true;
+  const extra = String(env.ALLOWED_ORIGINS || "").split(",").map((s) => s.trim()).filter(Boolean);
+  return DEFAULT_ORIGINS.concat(extra).includes(origin);
+}
+
+// Routes /ws to the single BarRoom Durable Object and serves the page (index.html) at /.
 export default {
   async fetch(req, env) {
     const url = new URL(req.url);
     if (url.pathname === "/ws") {
       if (req.headers.get("Upgrade") !== "websocket") return new Response("Expected WebSocket", { status: 426 });
-   const ALLOWED_ORIGINS = ["https://option2.live", "https://www.option2.live"];
-   const origin = req.headers.get("Origin");
-   if (origin && new URL(origin).host !== url.host && !ALLOWED_ORIGINS.includes(origin)) return new Response("Forbidden", { status: 403 });    }
-    return env.ASSETS.fetch(req);
+      if (!originOk(req.headers.get("Origin"), url, env)) return new Response("Forbidden", { status: 403 });
+      return env.BAR.get(env.BAR.idFromName("main")).fetch(req);
+    }
+    if (req.method !== "GET" && req.method !== "HEAD") return new Response("Method not allowed", { status: 405 });
+    if (url.pathname !== "/" && url.pathname !== "/index.html") return new Response("Not found", { status: 404 });
+    return new Response(req.method === "HEAD" ? null : page, {
+      headers: {
+        "content-type": "text/html; charset=utf-8",
+        "cache-control": "no-cache",
+        "x-content-type-options": "nosniff",
+        "referrer-policy": "no-referrer",
+      },
+    });
   },
 };
 

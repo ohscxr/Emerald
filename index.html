@@ -104,6 +104,11 @@ clip-path:polygon(0 0,100% 0,100% calc(100% - 8px),97% 100%,94% calc(100% - 8px)
 <script>
 // Connection to the Cloudflare Worker. Exposes the same small interface the app already uses:
 // doc(path).set/update/delete/onSnapshot and collection(name).onSnapshot.
+// If this page is served from the Worker itself (or localhost) it connects to the same host;
+// on any other site (like option2.live) it connects to the Worker below.
+var WORKER_HOST='bar-tabs.scarishawt.workers.dev';
+var SAME=/\.workers\.dev$|^localhost$|^127\.0\.0\.1$/.test(location.hostname);
+var WS_URL=(SAME?(location.protocol==='https:'?'wss:':'ws:')+'//'+location.host:'wss://'+WORKER_HOST)+'/ws';
 var mirror={},subs=[],ws=null,authed=false,rid=0,pend={},tries=0,userTried=false,booted=null;
 function g(i){return document.getElementById(i)}
 function getPin(){try{return localStorage.getItem('bartabs.pin')||''}catch(e){return ''}}
@@ -127,7 +132,7 @@ var wsDb={
 function showLogin(msg){g('login').hidden=false;g('lerr').textContent=msg||''}
 function open(){
   if(ws&&ws.readyState<2)return;
-  ws=new WebSocket('wss://bar-tabs.scarishawt.workers.dev/ws');
+  ws=new WebSocket(WS_URL);
   ws.onopen=function(){tries=0;ws.send(JSON.stringify({op:'auth',pin:getPin()}))};
   ws.onmessage=function(ev){var m;try{m=JSON.parse(ev.data)}catch(e){return}
     if(m.t==='denied'){authed=false;setPin('');showLogin(userTried?'Wrong passcode. Try again.':'');userTried=false}

@@ -1,12 +1,7 @@
 {
-  "name": "bar-tabs-live",
-  "main": "src/worker.js",
+  "name": "bar-tabs",
+  "main": "worker.js",
   "compatibility_date": "2025-09-01",
-  "assets": {
-    "directory": "./public",
-    "binding": "ASSETS",
-    "run_worker_first": ["/ws"]
-  },
   "durable_objects": {
     "bindings": [{ "name": "BAR", "class_name": "BarRoom" }]
   },
