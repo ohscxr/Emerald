@@ -1,0 +1,30 @@
+name: Deploy chat worker
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - worker.js
+      - wrangler.toml
+      - .github/workflows/deploy-worker.yml
+  workflow_dispatch:
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Deploy to Cloudflare Workers
+        uses: cloudflare/wrangler-action@v3
+        with:
+          apiToken: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+          accountId: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+          # Names listed here are read from `env:` below and uploaded to the
+          # Worker as secrets (same as `wrangler secret put`).
+          secrets: |
+            FIVEMANAGE_API_KEY
+            DISCORD_WEBHOOK_URL
+        env:
+          DISCORD_WEBHOOK_URL: ${{ secrets.DISCORD_WEBHOOK_URL }}
+          FIVEMANAGE_API_KEY: ${{ secrets.FIVEMANAGE_API_KEY }}
