@@ -6,7 +6,7 @@ export default {
     const url = new URL(req.url);
     if (url.pathname === "/ws") {
       if (req.headers.get("Upgrade") !== "websocket") return new Response("Expected WebSocket", { status: 426 });
-const ALLOWED_ORIGINS = ["https://option2.live/Emerald"];
+const ALLOWED_ORIGINS = ["https://ohscxr.github.io/Emerald/"];
 const origin = req.headers.get("Origin");
 if (origin && new URL(origin).host !== url.host && !ALLOWED_ORIGINS.includes(origin)) return new Response("Forbidden", { status: 403 });      return env.BAR.get(env.BAR.idFromName("main")).fetch(req);
     }
