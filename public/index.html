@@ -127,7 +127,7 @@ var wsDb={
 function showLogin(msg){g('login').hidden=false;g('lerr').textContent=msg||''}
 function open(){
   if(ws&&ws.readyState<2)return;
-  ws=new WebSocket('https://bar-tabs.scarishawt.workers.dev/ws');
+  ws=new WebSocket('wss://bar-tabs.scarishawt.workers.dev/ws');
   ws.onopen=function(){tries=0;ws.send(JSON.stringify({op:'auth',pin:getPin()}))};
   ws.onmessage=function(ev){var m;try{m=JSON.parse(ev.data)}catch(e){return}
     if(m.t==='denied'){authed=false;setPin('');showLogin(userTried?'Wrong passcode. Try again.':'');userTried=false}
