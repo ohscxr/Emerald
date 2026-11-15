@@ -66,7 +66,7 @@ aside{position:sticky;top:calc(16px + env(safe-area-inset-top,0px))}
 <div class="wrap">
   <header>
     <h1>The Emerald</h1>
-    <p>Tap + to build an order and see your total with tax and tip.</p>
+    <p>Tap + to build an order and see your total.</p>
   </header>
   <nav id="nav"></nav>
   <div class="layout">
@@ -77,10 +77,6 @@ aside{position:sticky;top:calc(16px + env(safe-area-inset-top,0px))}
         <p class="empty" id="empty">Nothing added yet.</p>
         <ul class="lines" id="lines"></ul>
         <div class="row"><span>Subtotal</span><b id="sub">$0.00</b></div>
-        <div class="row"><label for="tax">Tax rate (%)</label><input id="tax" type="number" min="0" max="30" step="0.1" value="6"></div>
-        <div class="row"><span>Tax</span><b id="taxAmt">$0.00</b></div>
-        <div class="row"><span>Tip</span><b id="tipAmt">$0.00</b></div>
-        <div class="tips" id="tips" role="group" aria-label="Tip percentage"></div>
         <div class="row"><label for="split">Split between</label><input id="split" type="number" min="1" max="50" step="1" value="1"></div>
         <div class="row total"><span>Total</span><span id="total">$0.00</span></div>
         <div class="each" id="each"></div>
@@ -126,7 +122,7 @@ const MENU=[
 ["Roy Rogers","Cola, grenadine syrup, maraschino cherry",40],
 ["Elderflower Fizz","Sparkling water and elderflower syrup",40]]}
 ];
-const qty={}; let tip=18;
+const qty={};
 const $=id=>document.getElementById(id);
 const money=n=>"$"+n.toFixed(2);
 const slug=s=>s.toLowerCase().replace(/[^a-z]+/g,"-");
@@ -135,7 +131,6 @@ $("nav").innerHTML=MENU.map(s=>`<a href="#${slug(s.n)}">${s.n}</a>`).join("");
 $("menu").innerHTML=MENU.map((s,si)=>`<section id="${slug(s.n)}"><h2>${s.n}</h2><div class="box">`+
  s.i.map((it,ii)=>{const k=si+"-"+ii;return `<div class="item"><div><b>${it[0]}</b><small>${it[1]}</small></div>
  <div><div class="price">${money(it[2])}</div><div class="step"><button type="button" data-k="${k}" data-d="-1" aria-label="Remove one ${it[0]}">−</button><output id="q${k}">0</output><button type="button" data-k="${k}" data-d="1" aria-label="Add one ${it[0]}">+</button></div></div></div>`}).join("")+`</div></section>`).join("");
-$("tips").innerHTML=[0,15,18,20,25].map(t=>`<button type="button" data-t="${t}" aria-pressed="${t===tip}">${t}%</button>`).join("");
 
 function find(k){const [a,b]=k.split("-");return MENU[a].i[b]}
 function calc(){
@@ -143,10 +138,9 @@ function calc(){
   let sub=0,count=0;
   $("lines").innerHTML=keys.map(k=>{const it=find(k),q=qty[k];sub+=it[2]*q;count+=q;return `<li><span>${q} × ${it[0]}</span><span>${money(it[2]*q)}</span></li>`}).join("");
   $("empty").style.display=keys.length?"none":"block";
-  const taxRate=Math.max(0,parseFloat($("tax").value)||0);
-  const tax=sub*taxRate/100, tp=sub*tip/100, total=sub+tax+tp;
+  const total=sub;
   const n=Math.max(1,parseInt($("split").value)||1);
-  $("sub").textContent=money(sub);$("taxAmt").textContent=money(tax);$("tipAmt").textContent=money(tp);
+  $("sub").textContent=money(sub);
   $("total").textContent=money(total);$("barTotal").textContent=money(total);
   $("barCount").textContent=count+(count===1?" item":" items");
   $("each").textContent=n>1&&total>0?money(total/n)+" each":"";
@@ -156,12 +150,7 @@ $("menu").addEventListener("click",e=>{
   const k=b.dataset.k;qty[k]=Math.max(0,(qty[k]||0)+ +b.dataset.d);
   $("q"+k).textContent=qty[k];calc();
 });
-$("tips").addEventListener("click",e=>{
-  const b=e.target.closest("button[data-t]");if(!b)return;
-  tip=+b.dataset.t;
-  $("tips").querySelectorAll("button").forEach(x=>x.setAttribute("aria-pressed",+x.dataset.t===tip));calc();
-});
-$("tax").addEventListener("input",calc);$("split").addEventListener("input",calc);
+$("split").addEventListener("input",calc);
 $("clear").addEventListener("click",()=>{Object.keys(qty).forEach(k=>{qty[k]=0;$("q"+k).textContent=0});calc()});
 calc();
 </script>
